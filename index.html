@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriSmart - AI Crop Recommendation</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Profit Analysis -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen active">
+        <div class="login-container">
+            <div class="login-left">
+                <div class="logo-large">
+                    <i class="fa-solid fa-leaf"></i> AgriSmart
+                </div>
+                <h1 data-i18n="login_welcome">Empowering Farmers with AI</h1>
+                <p data-i18n="login_subtitle">Get personalized crop recommendations, track profits, and monitor weather.</p>
+            </div>
+            <div class="login-right">
+                <!-- Login Box -->
+                <div class="login-box" id="login-box">
+                    <h2 data-i18n="login_title">Login to your account</h2>
+                    <div class="input-group">
+                        <label data-i18n="phone_number">Phone Number</label>
+                        <input type="text" placeholder="Enter phone number" id="login-phone">
+                    </div>
+                    <div class="input-group">
+                        <label data-i18n="password">Password</label>
+                        <input type="password" placeholder="Enter password" id="login-password">
+                    </div>
+                    <p id="login-error" class="error-msg hidden" style="color:var(--danger); font-size:0.85rem; margin-bottom:10px;" data-i18n="not_registered">This mobile number is not registered. Please sign up.</p>
+                    <button class="btn-primary w-100" onclick="app.login()" data-i18n="login_btn">Login</button>
+                    <p class="signup-link"><span data-i18n="no_account">Don't have an account?</span> <a href="#" onclick="app.toggleSignup()" data-i18n="signup">Sign Up</a></p>
+                </div>
+
+                <!-- Signup Box -->
+                <div class="login-box hidden" id="signup-box">
+                    <h2 data-i18n="signup_title">Create an account</h2>
+                    <div class="input-group">
+                        <label data-i18n="phone_number">Phone Number</label>
+                        <input type="text" placeholder="Enter phone number" id="signup-phone">
+                    </div>
+                    <div class="input-group">
+                        <label data-i18n="password">Password</label>
+                        <input type="password" placeholder="Create password" id="signup-password">
+                    </div>
+                    <p id="signup-error" class="error-msg hidden" style="color:var(--danger); font-size:0.85rem; margin-bottom:10px;" data-i18n="signup_error">Please enter phone and password.</p>
+                    <p id="signup-success" class="error-msg hidden" style="color:var(--primary); font-size:0.85rem; margin-bottom:10px;" data-i18n="signup_success">Account created successfully! Please login.</p>
+                    <button class="btn-primary w-100" onclick="app.signup()" data-i18n="signup_btn">Sign Up</button>
+                    <p class="signup-link"><span data-i18n="has_account">Already have an account?</span> <a href="#" onclick="app.toggleLogin()" data-i18n="login_btn">Login</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Layout (Hidden by default) -->
+    <div id="app-layout" class="screen">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fa-solid fa-leaf"></i> <span>AgriSmart</span>
+            </div>
+            <ul class="nav-links">
+                <li class="active" onclick="app.navigate('dashboard')">
+                    <i class="fa-solid fa-house"></i> <span data-i18n="nav_dashboard">Dashboard</span>
+                </li>
+                <li onclick="app.navigate('soil-input')">
+                    <i class="fa-solid fa-vial"></i> <span data-i18n="nav_soil">Soil Test</span>
+                </li>
+                <li onclick="app.navigate('crop-result')" id="nav-crop-result" style="display:none;">
+                    <i class="fa-solid fa-seedling"></i> <span data-i18n="nav_results">Results</span>
+                </li>
+                <li onclick="app.navigate('profit-analysis')">
+                    <i class="fa-solid fa-chart-line"></i> <span data-i18n="nav_profit">Profit</span>
+                </li>
+                <li onclick="app.navigate('weather')">
+                    <i class="fa-solid fa-cloud-sun"></i> <span data-i18n="nav_weather">Weather</span>
+                </li>
+                <li onclick="app.navigate('chat')">
+                    <i class="fa-solid fa-headset"></i> <span data-i18n="nav_assistant">Assistant</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <header class="topbar">
+                <div class="header-title">
+                    <h2 id="current-page-title" data-i18n="nav_dashboard">Dashboard</h2>
+                </div>
+                <div class="header-actions">
+                    <div class="lang-selector">
+                        <i class="fa-solid fa-globe"></i>
+                        <select id="language-select" onchange="app.changeLanguage(this.value)">
+                            <option value="en">English</option>
+                            <option value="hi">हिंदी (Hindi)</option>
+                            <option value="mr">मराठी (Marathi)</option>
+                        </select>
+                    </div>
+                    <div class="user-profile" onclick="app.logout()">
+                        <div class="avatar"><i class="fa-solid fa-user"></i></div>
+                        <span data-i18n="logout">Logout</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Screens Container -->
+            <div class="screens-container">
+                
+                <!-- Dashboard Screen -->
+                <div id="dashboard-screen" class="app-screen active">
+                    <div class="welcome-banner">
+                        <div>
+                            <h3 data-i18n="dash_welcome">Hello, Farmer Ramesh 👋</h3>
+                            <p data-i18n="dash_subtitle">Here is your farm overview for today.</p>
+                        </div>
+                        <button class="btn-primary" onclick="app.navigate('soil-input')">
+                            <i class="fa-solid fa-plus"></i> <span data-i18n="new_test">New Soil Test</span>
+                        </button>
+                    </div>
+                    
+                    <div class="dashboard-cards">
+                        <div class="card weather-card">
+                            <i class="fa-solid fa-cloud-rain weather-icon"></i>
+                            <h4 data-i18n="current_weather">Current Weather</h4>
+                            <div class="temp">28°C</div>
+                            <p data-i18n="light_rain">Light Rain expected today.</p>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="icon-box green"><i class="fa-solid fa-wheat-awn"></i></div>
+                            <h4 data-i18n="active_crop">Active Crop</h4>
+                            <div class="value">Wheat</div>
+                            <p data-i18n="harvest_in">Harvest in 45 days</p>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="icon-box blue"><i class="fa-solid fa-droplet"></i></div>
+                            <h4 data-i18n="soil_moisture">Soil Moisture</h4>
+                            <div class="value">42%</div>
+                            <p data-i18n="optimal">Optimal level</p>
+                        </div>
+                    </div>
+
+                    <div class="recent-activity">
+                        <h3 data-i18n="recent_reports">Recent Soil Reports</h3>
+                        <div class="activity-list" id="activity-list">
+                            <div class="activity-item" onclick="app.viewPastResult()">
+                                <div class="act-icon"><i class="fa-solid fa-file-lines"></i></div>
+                                <div class="act-details">
+                                    <h4>Field A - North Zone</h4>
+                                    <p>Tested on: 12 Oct 2025</p>
+                                </div>
+                                <div class="act-status success" data-i18n="completed">Completed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Soil Input Screen -->
+                <div id="soil-input-screen" class="app-screen">
+                    <div class="card upload-card">
+                        <h3 data-i18n="upload_report">Upload Soil Report</h3>
+                        <p data-i18n="upload_desc">Upload your lab report (PDF/Image) and our AI will automatically extract the values.</p>
+                        <div class="drop-zone" id="drop-zone">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <p data-i18n="drag_drop">Drag & drop file here or click to browse</p>
+                            <input type="file" id="file-upload" hidden accept="image/*,.pdf">
+                            <button class="btn-outline mt-10" onclick="document.getElementById('file-upload').click()" data-i18n="browse_files">Browse Files</button>
+                        </div>
+                        <div id="upload-status" class="upload-status hidden">
+                            <i class="fa-solid fa-spinner fa-spin"></i> <span data-i18n="extracting">Extracting data using AI...</span>
+                        </div>
+                    </div>
+
+                    <div class="divider">
+                        <span data-i18n="or_manual">OR ENTER MANUALLY</span>
+                    </div>
+
+                    <div class="card form-card">
+                        <h3 data-i18n="manual_entry">Manual Data Entry</h3>
+                        <form id="soil-form" onsubmit="app.submitSoilForm(event)">
+                            <div class="form-grid">
+                                <div class="input-group">
+                                    <label>Nitrogen (N)</label>
+                                    <input type="number" id="val-n" placeholder="e.g. 90" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>Phosphorus (P)</label>
+                                    <input type="number" id="val-p" placeholder="e.g. 42" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>Potassium (K)</label>
+                                    <input type="number" id="val-k" placeholder="e.g. 43" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>pH Level</label>
+                                    <input type="number" step="0.1" id="val-ph" placeholder="e.g. 6.5" required>
+                                </div>
+                                <div class="input-group">
+                                    <label data-i18n="moisture">Moisture (%)</label>
+                                    <input type="number" id="val-moisture" placeholder="e.g. 30" required>
+                                </div>
+                                <div class="input-group">
+                                    <label data-i18n="humus">Humus (%)</label>
+                                    <input type="number" step="0.1" id="val-humus" placeholder="e.g. 2.5">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary mt-20 w-100">
+                                <i class="fa-solid fa-microchip"></i> <span data-i18n="get_recommendation">Get AI Recommendation</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Crop Recommendation Result Screen -->
+                <div id="crop-result-screen" class="app-screen">
+                    <div class="result-header">
+                        <div class="ai-badge"><i class="fa-solid fa-sparkles"></i> AI Analysis Complete</div>
+                        <h2 data-i18n="best_crop">Best Crop for your Soil</h2>
+                    </div>
+                    
+                    <div class="recommended-crop-card">
+                        <div class="crop-img-placeholder">
+                            <i class="fa-solid fa-seedling"></i>
+                        </div>
+                        <div class="crop-info">
+                            <h1 id="res-crop-name">Rice</h1>
+                            <div class="confidence-bar">
+                                <span data-i18n="ai_confidence">AI Confidence: 94%</span>
+                                <div class="progress"><div class="progress-fill" style="width: 94%"></div></div>
+                            </div>
+                            <p data-i18n="crop_desc">Based on high moisture and current humidity, Rice is highly recommended for optimal yield.</p>
+                        </div>
+                    </div>
+
+                    <div class="recommendations-grid">
+                        <div class="card rec-card">
+                            <div class="rec-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+                            <h4 data-i18n="fertilizer">Suggested Fertilizer</h4>
+                            <p id="res-fert">Urea (High Nitrogen)</p>
+                            <small data-i18n="fert_desc">Apply 50kg per acre</small>
+                        </div>
+                        <div class="card rec-card">
+                            <div class="rec-icon"><i class="fa-solid fa-bug-slash"></i></div>
+                            <h4 data-i18n="pesticide">Organic Pesticide</h4>
+                            <p id="res-pest">Neem Oil Extract</p>
+                            <small data-i18n="pest_desc">Spray every 15 days</small>
+                        </div>
+                    </div>
+
+                    <div class="actions-row mt-20">
+                        <button class="btn-primary" onclick="app.navigate('profit-analysis')" data-i18n="view_profit">View Profit Analysis</button>
+                        <button class="btn-outline" onclick="app.saveToDashboard()" data-i18n="save_dashboard">Save to Dashboard</button>
+                    </div>
+                </div>
+
+                <!-- Profit Analysis Screen -->
+                <div id="profit-analysis-screen" class="app-screen">
+                    <div class="card profit-summary">
+                        <h3 data-i18n="est_profit">Estimated Profit Analysis</h3>
+                        <p class="subtitle" data-i18n="profit_desc">Based on current market rates and expected yield for 1 Acre.</p>
+                        
+                        <div class="profit-figures">
+                            <div class="figure">
+                                <span class="label" data-i18n="est_cost">Est. Cost</span>
+                                <span class="value cost">₹15,000</span>
+                            </div>
+                            <div class="figure">
+                                <span class="label" data-i18n="est_revenue">Est. Revenue</span>
+                                <span class="value revenue">₹45,000</span>
+                            </div>
+                            <div class="figure highlight">
+                                <span class="label" data-i18n="net_profit">Net Profit</span>
+                                <span class="value profit">₹30,000</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card chart-card mt-20">
+                        <h4 data-i18n="profit_breakdown">Cost Breakdown</h4>
+                        <div class="chart-container">
+                            <canvas id="costChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather + Location Screen -->
+                <div id="weather-screen" class="app-screen">
+                    <div class="card location-card">
+                        <div class="input-group">
+                            <label data-i18n="enter_pincode">Enter Pincode</label>
+                            <div class="search-box">
+                                <input type="text" id="pincode-input" placeholder="e.g. 400001">
+                                <button class="btn-primary" onclick="app.getWeather()"><i class="fa-solid fa-magnifying-glass"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="weather-results mt-20 hidden" id="weather-details">
+                        <div class="card main-weather">
+                            <h2 id="w-location">Mumbai, Maharashtra</h2>
+                            <div class="w-main-info">
+                                <i id="w-icon" class="fa-solid fa-cloud-showers-heavy w-icon"></i>
+                                <div id="w-temp" class="w-temp">24°C</div>
+                            </div>
+                            <p id="w-desc" class="w-desc" data-i18n="heavy_rain">Heavy Rainfall Expected</p>
+                            
+                            <div class="w-grid">
+                                <div class="w-item">
+                                    <span data-i18n="humidity">Humidity</span>
+                                    <strong id="w-humidity">88%</strong>
+                                </div>
+                                <div class="w-item">
+                                    <span data-i18n="wind">Wind</span>
+                                    <strong id="w-wind">12 km/h</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert-card warning mt-20">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <div>
+                                <h4 data-i18n="weather_alert">AI Weather Alert</h4>
+                                <p data-i18n="alert_desc">Delay pesticide application by 2 days due to expected rain.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat & Voice Assistant Screen -->
+                <div id="chat-screen" class="app-screen">
+                    <div class="chat-container card">
+                        <div class="chat-header">
+                            <div class="avatar ai-avatar"><i class="fa-solid fa-robot"></i></div>
+                            <div>
+                                <h3 data-i18n="ai_assistant">AgriBot Assistant</h3>
+                                <small class="online-status">Online</small>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="message ai-message">
+                                <p data-i18n="chat_welcome">Hello! I am your AI farming assistant. You can ask me about crops, fertilizers, or diseases.</p>
+                            </div>
+                        </div>
+
+                        <div class="chat-input-area">
+                            <button class="voice-btn" id="voice-btn" onclick="app.toggleVoice()">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                            <input type="text" id="chat-input" placeholder="Ask a question..." data-i18n-placeholder="chat_placeholder" onkeypress="app.handleChatKey(event)">
+                            <button class="send-btn" onclick="app.sendMessage()">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Bottom Navigation for Mobile -->
+        <nav class="bottom-nav">
+            <div class="b-nav-item active" onclick="app.navigate('dashboard')">
+                <i class="fa-solid fa-house"></i>
+                <span data-i18n="nav_dashboard">Dashboard</span>
+            </div>
+            <div class="b-nav-item" onclick="app.navigate('soil-input')">
+                <i class="fa-solid fa-vial"></i>
+                <span data-i18n="nav_soil">Soil</span>
+            </div>
+            <div class="b-nav-item" onclick="app.navigate('weather')">
+                <i class="fa-solid fa-cloud-sun"></i>
+                <span data-i18n="nav_weather">Weather</span>
+            </div>
+            <div class="b-nav-item" onclick="app.navigate('chat')">
+                <i class="fa-solid fa-headset"></i>
+                <span data-i18n="nav_assistant">Assistant</span>
+            </div>
+        </nav>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
